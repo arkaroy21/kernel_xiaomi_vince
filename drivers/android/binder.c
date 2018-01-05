@@ -4606,7 +4606,16 @@ static int binder_thread_release(struct binder_proc *proc,
 		wake_up_poll(&thread->wait, POLLHUP | POLLFREE);
 	}
 
-	binder_inner_proc_unlock(thread->proc);
+        binder_inner_proc_unlock(thread->proc);
+
+	/*
+	 * This is needed to avoid races between wake_up_poll() above and
+	 * and ep_remove_waitqueue() called for other reasons (eg the epoll file
+	 * descriptor being closed); ep_remove_waitqueue() holds an RCU read
+	 * lock, so we can be sure it's done after calling synchronize_rcu().
+	 */
+	if (thread->looper & BINDER_LOOPER_STATE_POLL)
+		synchronize_rcu();
 
 	/*
 	 * This is needed to avoid races between wake_up_poll() above and
