@@ -1316,6 +1316,13 @@ static int dwc3_probe(struct platform_device *pdev)
 	pm_runtime_enable(dev);
 	pm_runtime_forbid(dev);
 
+	ret = dwc3_core_init(dwc);
+	if (ret) {
+		if (ret != -EPROBE_DEFER)
+			dev_err(dev, "failed to initialize core: %d\n", ret);
+		goto err4;
+	}
+
 	/* Check the maximum_speed parameter */
 	switch (dwc->maximum_speed) {
 	case USB_SPEED_LOW:
