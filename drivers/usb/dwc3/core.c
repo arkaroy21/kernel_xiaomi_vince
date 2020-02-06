@@ -1091,7 +1091,8 @@ int dwc3_core_pre_init(struct dwc3 *dwc)
 		}
 	}
 
-	return ret;
+	/* de-assert DRVVBUS for HOST and OTG mode */
+	dwc3_set_mode(dwc, DWC3_GCTL_PRTCAP_DEVICE);
 }
 
 #define DWC3_ALIGN_MASK		(16 - 1)
@@ -1315,13 +1316,6 @@ static int dwc3_probe(struct platform_device *pdev)
 	pm_runtime_set_active(dev);
 	pm_runtime_enable(dev);
 	pm_runtime_forbid(dev);
-
-	ret = dwc3_core_init(dwc);
-	if (ret) {
-		if (ret != -EPROBE_DEFER)
-			dev_err(dev, "failed to initialize core: %d\n", ret);
-		goto err4;
-	}
 
 	/* Check the maximum_speed parameter */
 	switch (dwc->maximum_speed) {
